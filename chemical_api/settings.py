@@ -14,6 +14,10 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+DB_DIR = os.path.join(BASE_DIR, 'db')
+if not os.path.exists(DB_DIR):
+    print("creating dir", DB_DIR)
+    os.makedirs(DB_DIR)
 
 
 # Quick-start development settings - unsuitable for production
