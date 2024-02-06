@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Materials Management</title>
+    <script>
+        let materials = [];
+
+        async function createMaterial() {
+            const formula = document.getElementById('formula').value;
+            const density = parseFloat(document.getElementById('density').value);
+
+            const response = await fetch('http://localhost:8000/api/material/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ formula, density })
+            });
+
+            const materialId = await response.text();
+            alert(`Created material with ID: ${materialId}`);
+        }
+
+        async function getMaterial() {
+            const materialId = document.getElementById('getMaterialId').value;
+            const response = await fetch(`http://localhost:8000/api/material/${materialId}`);
+
+            if (response.status === 404) {
+                alert('Material not found');
+                return;
+            }
+
+            const material = await response.json();
+            alert(`Material: Formula = ${material.formula}, Density = ${material.density}`);
+        }
+
+        async function searchMaterials() {
+ 	    const minDensity = parseFloat(document.getElementById('minDensity').value) || null;
+            const maxDensity = parseFloat(document.getElementById('maxDensity').value) || null;
+            const includeElementsInput = document.getElementById('includeElements').value.trim();
+            const excludeElementsInput = document.getElementById('excludeElements').value.trim();
+
+            const includeElements = includeElementsInput ? includeElementsInput.split(',') : null;
+            const excludeElements = excludeElementsInput ? excludeElementsInput.split(',') : null;
+
+
+            let query = "?";
+            if (minDensity !== null) query += `min-density=${minDensity}&`;
+            if (maxDensity !== null) query += `max-density=${maxDensity}&`;
+            if (includeElements) query += `include-elements=${includeElements.join(',')}&`;
+            if (excludeElements) query += `exclude-elements=${excludeElements.join(',')}&`;
+
+
+            const response = await fetch(`http://localhost:8000/api/search/${query}`);
+            materials = await response.json();
+
+            // Populate table
+            const table = document.getElementById('resultsTable').getElementsByTagName('tbody')[0];
+            table.innerHTML = ''; // Clear existing rows
+
+            materials.forEach(material => {
+                const row = table.insertRow();
+                const cell1 = row.insertCell(0);
+                const cell2 = row.insertCell(1);
+
+                cell1.innerHTML = material.formula;
+                cell2.innerHTML = material.density;
+            });
+        }
+    </script>
+</head>
+<body>
+    <h1>Materials Management</h1>
+
+    <h2>Create Material</h2>
+    <label for="formula">Formula:</label>
+    <input type="text" id="formula" name="formula"><br>
+    <label for="density">Density:</label>
+    <input type="text" id="density" name="density"><br>
+    <button onclick="createMaterial()">Create</button>
+
+    <h2>Get Material</h2>
+    <label for="getMaterialId">Material ID:</label>
+    <input type="text" id="getMaterialId" name="getMaterialId"><br>
+    <button onclick="getMaterial()">Get Material</button>
+
+    <h2>Search Materials</h2>
+    <label for="minDensity">Minimal Density:</label>
+    <input type="text" id="minDensity" name="minDensity"><br>
+    <label for="maxDensity">Maximal Density:</label>
+    <input type="text" id="maxDensity" name="maxDensity"><br>
+    <label for="includeElements">Include Elements (comma-separated):</label>
+    <input type="text" id="includeElements" name="includeElements"><br>
+    <label for="excludeElements">Exclude Elements (comma-separated):</label>
+    <input type="text" id="excludeElements" name="excludeElements"><br>
+    <button onclick="searchMaterials()">Search</button>
+
+    <h2>Search Results</h2>
+    <table id="resultsTable">
+        <thead>
+            <tr>
+                <th>Formula</th>
+                <th>Density</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Rows will be inserted here -->
+        </tbody>
+    </table>
+</body>
+</html>
